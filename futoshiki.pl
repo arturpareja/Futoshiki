@@ -1,5 +1,13 @@
 :- use_module(library(clpfd)).
 
+% medidor de tiempo
+ponTiempo:- retractall(tiempo(_)), get_time(T),
+        assert(tiempo(T)).
+
+escribeTiempo:-
+        get_time(T2), tiempo(T1), T is (T2-T1),
+        nl, nl, write('Elapsed time: '),write(T), write(' secs.').
+
 futoshiki(Rows, Lts) :-
         length(Rows, N), maplist(length_(N), Rows),
         append(Rows, Cells), Cells ins 1..N,
@@ -53,5 +61,9 @@ solution(1,
           [3,5,4,1,2],
           [4,2,5,3,1]]).
 
-futoshiki_solve(X, Rows) :- problem(X, Rows, Lts), futoshiki(Rows, Lts), maplist(writeln, Rows).
+futoshiki_solve(X, Rows) :- ponTiempo, problem(X, Rows, Lts), futoshiki(Rows, Lts), maplist(writeln, Rows), escribeTiempo.
 futoshiki_check(X) :- futoshiki_solve(X, Rows1), solution(X, Rows2), Rows1 == Rows2.
+
+unique_solution :- findall(Rows, futoshiki_solve(1, Rows), L), 
+                    length(L, N),
+                    N == 1.
