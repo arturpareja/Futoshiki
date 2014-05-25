@@ -1,4 +1,5 @@
 :- use_module(library(clpfd)).
+:- include('findnsols_lib.pl').
 
 % medidor de tiempo
 ponTiempo:- retractall(tiempo(_)), get_time(T),
@@ -18,13 +19,13 @@ futoshiki(Rows, Lts) :-
 length_(L, Ls) :-
         length(Ls, L).
 
-cell(I, J,Rows,C) :-    
+cell([I, J],Rows,C) :-    
         nth0(I,Rows,Row),
         nth0(J,Row,C).
 
 unequal(Rows, [I1,J1,I2,J2]) :-
-        cell(I1,J1, Rows, C1),
-        cell(I2,J2, Rows, C2),
+        cell([I1,J1], Rows, C1),
+        cell([I2,J2], Rows, C2),
         C1 #< C2.
 
 unequals(Rows, Lts) :- 
@@ -64,6 +65,11 @@ solution(1,
 futoshiki_solve(X, Rows) :- ponTiempo, problem(X, Rows, Lts), futoshiki(Rows, Lts), maplist(writeln, Rows), escribeTiempo.
 futoshiki_check(X) :- futoshiki_solve(X, Rows1), solution(X, Rows2), Rows1 == Rows2.
 
-unique_solution :- findall(Rows, futoshiki_solve(1, Rows), L), 
-                    length(L, N),
-                    N == 1.
+unique_solution(Rows, Lts) :- 
+    findall(Rows, futoshiki(Rows,Lts), L),
+    length(L, 1).
+
+not_unique_solution(Rows, Lts) :- 
+    findnsols(2,Rows, futoshiki(Rows,Lts), L),
+    length(L, N),
+    N \= 1.
