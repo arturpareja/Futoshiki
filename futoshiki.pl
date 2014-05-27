@@ -66,7 +66,7 @@ futoshiki_solve(X, Rows) :- ponTiempo, problem(X, Rows, Lts), futoshiki(Rows, Lt
 futoshiki_check(X) :- futoshiki_solve(X, Rows1), solution(X, Rows2), Rows1 == Rows2.
 
 unique_solution(Rows, Lts) :- 
-    findall(Rows, futoshiki(Rows,Lts), L),
+    findnsols(2, Rows, futoshiki(Rows,Lts), L),
     length(L, 1).
 
 not_unique_solution(Rows, Lts) :- 

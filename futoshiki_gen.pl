@@ -85,13 +85,35 @@ partial_futoshiki(0, 0, _, _, _, Rows1, Lts1, _) :-
 	unique_solution(Rows1, Lts1).
 
 gen_futoshiki(N) :-
+	writeln('Dificultad? F: facil, D: dificil'),
+	readln(Dif),
+	difficulty(N, Dif, NC, NL),
 	gen_solution(N, Rows),
 	gen_lessthans(N, Rows, Lts),
 	gen_positions(N, LPos),
 	empty_problem(N, Rows1),
 	Lts1 = [],
-	partial_futoshiki(2, 5, Rows, Lts, LPos, Rows1, Lts1, LtsF),
-	writeln('------Tablero------'),
-	maplist(writeln, Rows1),
-	writeln('---Restricciones---'),
-	maplist(writeln, LtsF).
+	partial_futoshiki(NC, NL, Rows, Lts, LPos, Rows1, Lts1, LtsF),
+	%Escribir por pantalla
+	writeln(' '),
+	writeln('------ Tablero ------'),
+	writeln(' '),
+	maplist(printRows(N), Rows1),
+	writeln(' '),
+	writeln('--- Restricciones ---'),
+	writeln(' '),
+	maplist(printLts, LtsF), !.
+
+printLts([X,Y,Z,W]) :- write([X,Y]), write(' < '), write([Z,W]), writeln('').
+
+printRows(0, _) :- writeln(''), !.
+printRows(N, [X|Xs]) :- var(X), !, write('-'), write('  '), N1 is N-1, printRows(N1, Xs).
+printRows(N, [X|Xs]) :- write(X), write('  '), N1 is N-1, printRows(N1, Xs).
+
+%Recibe el tamaño del tablero y un nivel de dificultad y devuelve NC y NL
+difficulty(4, ['F'], 4, 6).
+difficulty(4, ['D'], 1, 8).
+difficulty(5, ['F'], 5, 11).
+difficulty(5, ['D'], 2, 9).
+%difficulty(5, ['D'], 4, 7). Funciona también
+difficulty(6, ['F'], 5, 11).
