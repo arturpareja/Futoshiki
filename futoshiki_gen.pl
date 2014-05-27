@@ -59,14 +59,29 @@ get_lessthans(Lts, LtsR, Restr) :-
 	delete(Lts, Restr, LtsR).
 
 %LPos: lista de posiciones libres, Rows1 y LtsF son de salida
-partial_futoshiki(_,_,[],_,_,[]).
-partial_futoshiki(_,[],_,_,_,[]).
-partial_futoshiki(Rows, Lts, LPos, Rows1, Lts1, [Restr|LtsF]) :-
-	not_unique_solution(Rows1, Lts1),
+partial_futoshiki(_,_,_,_,[],_,_,[]). %LPos vacia
+
+partial_futoshiki(_,_,_,[],_,_,_,[]). %Lts vacia
+
+partial_futoshiki(NC, NL, Rows, Lts, LPos, Rows1, Lts1, LtsF) :-
+	NC > 0,
 	set_cell(Rows, LPos, Rows1, LPos1),
-	get_lessthans(Lts, LtsR, Restr),	
-    partial_futoshiki(Rows, LtsR, LPos1, Rows1, [Restr|Lts1], LtsF).
-partial_futoshiki(_, _, _, Rows1, Lts1, LtsF) :-
+	NC1 is NC -1,
+    partial_futoshiki(NC1, NL, Rows, Lts, LPos1, Rows1, Lts1, LtsF).
+
+partial_futoshiki(NC, NL, Rows, Lts, LPos, Rows1, Lts1, [Restr|LtsF]) :-
+	NL > 0,
+	get_lessthans(Lts, LtsR, Restr),
+	NL1 is NL - 1,	
+    partial_futoshiki(NC, NL1, Rows, LtsR, LPos, Rows1, [Restr|Lts1], LtsF).
+
+%partial_futoshiki(0, 0, Rows, Lts, LPos, Rows1, Lts1, [Restr|LtsF]) :-
+	%not_unique_solution(Rows1, Lts1),
+	%set_cell(Rows, LPos, Rows1, LPos1),
+	%get_lessthans(Lts, LtsR, Restr),	
+    %partial_futoshiki(0, 0, Rows, LtsR, LPos1, Rows1, [Restr|Lts1], LtsF).
+
+partial_futoshiki(0, 0, _, _, _, Rows1, Lts1, _) :-
 	unique_solution(Rows1, Lts1).
 
 gen_futoshiki(N) :-
@@ -75,8 +90,8 @@ gen_futoshiki(N) :-
 	gen_positions(N, LPos),
 	empty_problem(N, Rows1),
 	Lts1 = [],
-	partial_futoshiki(Rows, Lts, LPos, Rows1, Lts1, LtsF),
+	partial_futoshiki(2, 5, Rows, Lts, LPos, Rows1, Lts1, LtsF),
 	writeln('------Tablero------'),
 	maplist(writeln, Rows1),
 	writeln('---Restricciones---'),
-	maplist(writeln, LtsF),!.
+	maplist(writeln, LtsF).
