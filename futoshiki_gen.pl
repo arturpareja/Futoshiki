@@ -393,3 +393,41 @@ critical(N, H, X, Y, LPos) :-
 
 decimal_hashing([X,Y], Z) :-
 	Z #= X * 10 + Y.
+
+% M modulo N(para aplicar con maplist)
+modulo(N, M, M1) :-
+	M1 is M mod N.
+
+% restar uno a cada elem de una lista
+modulo_list(N, L, Z) :-
+	maplist(modulo(N),L,Z).
+
+% reemplaza cada elemento O por un elemento R
+replace(_, _, [], []).
+replace(O, R, [O|T], [R|T2]) :- replace(O, R, T, T2).
+replace(O, R, [H|T], [H|T2]) :- H \= O, replace(O, R, T, T2).
+
+%cobertura minimal = cubrir al menos n-1 filas y n-1 columnas (H >= N-1)
+%numero de celdas H >= NC + NL => H >= N-1
+criticalset(N, H, LPos) :-
+	randseq(H,H,L1),		%secuencia aleatoria de H posiciones (una por celda)
+	randseq(H,H,L2),		%secuencia aleatoria de H posiciones (una por celda)
+	modulo_list(N,L1,LX), 	%posiciones en X para cada celda, dentro del tamaño del tablero
+	modulo_list(N,L2,LY), 	%posiciones en Y para cada celda, dentro del tamaño del tablero
+	merge_lists(LX, LY, LPos), %combina las listas Xs, Ys en una lista de pares [X,Y]
+	%=====ALL DISTINCT PARA LISTAS =======
+	maplist(decimal_hashing, LPos, LHash), 	% obtenemos el hash de cada [X,Y]
+	all_distinct(LHash).					% comprobamos que todos los hashes sean distintos
+	%=====================================
+
+genfutoshiki(N, NC, NL) :-
+	gen_solution(N, Rows),
+	gen_lessthans(N, Rows, Lts),
+	empty_problem(N, Rows1),
+	%critical_set_size(N, NC, NL), 
+	H is NC + NL,
+	criticalset(N, H, LPos),
+	length(Lts1, NL),
+	critical_futoshiki(NC, NL, Rows, Lts, LPos, Rows1, Lts1),
+	unique_solution(Rows1,Lts1),
+	print_futoshiki(N, Rows1, Lts1).
