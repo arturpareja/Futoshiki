@@ -407,27 +407,92 @@ replace(_, _, [], []).
 replace(O, R, [O|T], [R|T2]) :- replace(O, R, T, T2).
 replace(O, R, [H|T], [H|T2]) :- H \= O, replace(O, R, T, T2).
 
-%cobertura minimal = cubrir al menos n-1 filas y n-1 columnas (H >= N-1)
-%numero de celdas H >= NC + NL => H >= N-1
+% Cobertura minimal = cubrir al menos n-1 filas y n-1 columnas (H >= N-1)
+% N1 is N - 1
+minimal_cover(N, N1, LX, LY) :-
+	randseq(N1, N, L1),		%secuencia aleatoria
+	randseq(N1, N, L2),		%secuencia aleatoria
+	modulo_list(N,L1,LX), 	% LX = posiciones permitidas en X para cada celda, dentro del tamaño del tablero
+	modulo_list(N,L2,LY),!. 	% LY = posiciones permitidas en Y para cada celda, dentro del tamaño del tablero
+
+% Extiende la cobertura minimal con M marcadores mas, elegidos de forma aleatoria entre LX, LY
+extend_cover(0, LX, LY, LX, LY) :- !.
+extend_cover(M, LX, LY, [X|LX1], [Y|LY1]) :-
+	M1 is M - 1,
+	random_member(X, LX),
+	random_member(Y, LY),
+	extend_cover(M1, LX, LY, LX1, LY1).
+
+% Genera marcadores de posicion (placeholders) para formar conjuntos criticos (critical set)
+% H = NC + NL 
+% H >= N - 1 
 criticalset(N, H, LPos) :-
-	randseq(H,H,L1),		%secuencia aleatoria de H posiciones (una por celda)
-	randseq(H,H,L2),		%secuencia aleatoria de H posiciones (una por celda)
-	modulo_list(N,L1,LX), 	%posiciones en X para cada celda, dentro del tamaño del tablero
-	modulo_list(N,L2,LY), 	%posiciones en Y para cada celda, dentro del tamaño del tablero
-	merge_lists(LX, LY, LPos), %combina las listas Xs, Ys en una lista de pares [X,Y]
+	N1 is N - 1,
+	minimal_cover(N, N1, LX, LY),
+	M is H - N1,
+	extend_cover(M, LX, LY, LX1, LY1),
+	permutation(LX1, PX),
+	permutation(LY1, PY),
+	merge_lists(PX, PY, LPos),
 	%=====ALL DISTINCT PARA LISTAS =======
 	maplist(decimal_hashing, LPos, LHash), 	% obtenemos el hash de cada [X,Y]
 	all_distinct(LHash).					% comprobamos que todos los hashes sean distintos
 	%=====================================
 
+
+% Rellena todos los marcadores de posicion de un conjunto critico con NC celdas y NL restricciones
+fill_placeholders(_, 0, 0, _, [], _, _). 
+
+fill_placeholders(N1, NC, NL, Rows, LPos, Rows1, Lts1) :-
+	NC > 0,
+	NC1 is NC - 1,
+	set_cell(Rows, LPos, Rows1, LPos1),
+	fill_placeholders(N1, NC1, NL, Rows, LPos1, Rows1, Lts1).
+
+fill_placeholders(N1, NC, NL, Rows, LPos, Rows1, Lts1) :-
+	NL > 0,
+	NL1 is NL - 1,
+	fill_lts(N1, NL1, LPos, Lts1, LPos1),
+	fill_placeholders(N1, NC, NL1, Rows, LPos1, Rows1, Lts1).
+
+% IMPORTANTE: la coordenada que escojamos de LPos, 
+% siempre va a indicar las coordenadas I2, J2 de la coordenada (I1,J1) < (I2, J2)
+% en cualquier otro caso, la construccion del conjunto critico esta mal 
+fill_lts(N1, Index, LPos, Lts1, LPos1) :-
+	random_member([I2,J2], LPos), 		%Obtiene P = [i,j] aleatoriamente de LPos
+	delete(LPos, [I2,J2], LPos1),
+	D is random(4), 					% 0 = Norte, 1 = Este, 2 = Sur, 3 = Oeste
+	set_direction(D, N1, I1, J1, I2, J2),
+	nth0(Index, Lts1, [I1, J1, I2, J2]). %Lo unifica en la i-esima posicion de Lts1
+
+set_direction(0, _, I1, J2, I2, J2) :-
+	I2 > 0,
+	I1 is I2 - 1,!.
+
+set_direction(1, N1, I2, J1, I2, J2) :-
+	J2 < N1,
+	J1 is J2 + 1,!.
+
+set_direction(2, N1, I1, J2, I2, J2) :-
+	I2 < N1,
+	I1 is I2 + 1,!.
+
+set_direction(3, _, I2, J1, I2, J2) :-
+	J2 > 0,
+	J1 is J2 - 1,!.
+
+%critical_set_size(N, NC, NL), 
 genfutoshiki(N, NC, NL) :-
 	gen_solution(N, Rows),
-	gen_lessthans(N, Rows, Lts),
+	writeln('solucion creada'),
 	empty_problem(N, Rows1),
-	%critical_set_size(N, NC, NL), 
-	H is NC + NL,
-	criticalset(N, H, LPos),
+	writeln('problema creado'),
 	length(Lts1, NL),
-	critical_futoshiki(NC, NL, Rows, Lts, LPos, Rows1, Lts1),
+	writeln('restricciones creadas'),
+	H is NC + NL,
+	N1 is N - 1, !,
+	criticalset(N, H, LPos),
+	writeln(LPos),
+	fill_placeholders(N1, NC, NL, Rows, LPos, Rows1, Lts1),
 	unique_solution(Rows1,Lts1),
-	print_futoshiki(N, Rows1, Lts1).
+	print_futoshiki(N, Rows1, Lts1),!.
