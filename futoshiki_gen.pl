@@ -89,22 +89,14 @@ gen_futoshiki(N) :-
 	writeln('Dificultad? F: facil, D: dificil'),
 	readln(Dif),
 	gen_solution(N, Rows),
-	%solution(2, Rows),
 	gen_lessthans(N, Rows, Lts),
 	gen_positions(N, LPos),
 	empty_problem(N, Rows1),
-	Lts1 = [], !,
-	difficulty(N, Dif, NC, NL), 	
+	Lts1 = [],!,
+	difficulty(N, Dif, NC, NL), 
 	partial_futoshiki(NC, NL, Rows, Lts, LPos, Rows1, Lts1, LtsF),!,
 	%Escribir por pantalla
-	writeln(' '),
-	writeln('------ Tablero ------'),
-	writeln(' '),
-	maplist(printRows(N), Rows1),
-	writeln(' '),
-	writeln('--- Restricciones ---'),
-	writeln(' '),
-	maplist(printLts, LtsF),!.
+	print_futoshiki(N, Rows1, LtsF),!.
 
 printLts([X,Y,Z,W]) :- write([X,Y]), write(' < '), write([Z,W]), writeln('').
 
@@ -114,23 +106,26 @@ printRows(N, [X|Xs]) :- write(X), write('  '), N1 is N-1, printRows(N1, Xs).
 
 %Recibe el tamaño del tablero y un nivel de dificultad y devuelve NC y NL
 difficulty(4, ['F'], 0, 7).
-difficulty(4, ['F'], 1, 4).
-difficulty(4, ['F'], 1, 5).
-difficulty(4, ['F'], 1, 5).
-difficulty(4, ['F'], 2, 4).
+difficulty(4, ['F'], 1, 6).
+difficulty(4, ['F'], 2, 5).
 difficulty(4, ['F'], 3, 4).
+difficulty(4, ['F'], 4, 3).
 
-
-difficulty(4, ['D'], 0, 4).
-difficulty(4, ['D'], 0, 5).
-difficulty(4, ['D'], 1, 4).
-difficulty(4, ['D'], 2, 3).
+difficulty(4, ['D'], 0, 6).
+difficulty(4, ['D'], 1, 5).
+difficulty(4, ['D'], 2, 4).
+difficulty(4, ['D'], 3, 3).
 
 difficulty(5, ['F'], 5, 11).
-difficulty(5, ['D'], 1, 9).
-%difficulty(5, ['D'], 4, 7). Funciona también
+difficulty(5, ['F'], 6, 10).
+
+difficulty(5, ['D'], 4, 9).
+difficulty(5, ['D'], 4, 7).
+
 difficulty(6, ['F'], 7, 14).
-difficulty(6, ['D'], 5, 11).
+difficulty(6, ['F'], 8, 13).
+
+difficulty(6, ['D'], 8, 11).
 
 
 
